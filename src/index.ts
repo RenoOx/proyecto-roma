@@ -3,6 +3,7 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import OpenAI from "openai";
 import { ROMA_SYSTEM_PROMPT } from "./prompts";
+import prisma from "./db";
 
 const app = new Hono();
 const openai = new OpenAI({
@@ -11,26 +12,48 @@ const openai = new OpenAI({
 
 app.post("/chat", async (c) => {
   //the user sends
-  const { message } = await c.req.json();
+  const { message, conversationId } = await c.req.json();
 
   if (message.length > 500) {
     return c.json({ error: "Mensaje demasiado largo" }, 400);
   }
 
+  await prisma.message.create({
+    data: {
+      conversationId,
+      role: "user",
+      content: message,
+    },
+  });
+
+  // Extraemos los últimos 10 mensajes de esta conversación
+  const history = await prisma.message.findMany({
+    where: { conversationId },
+    orderBy: { createdAt: "asc" },
+    take: 10,
+  });
+
+  const messages = history.map((msg) => ({
+    role: msg.role as "user" | "assistant",
+    content: msg.content,
+  }));
+
   // call openai
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content: ROMA_SYSTEM_PROMPT,
-      },
-      { role: "user", content: message },
-    ],
+    messages: [{ role: "system", content: ROMA_SYSTEM_PROMPT }, ...messages],
   });
 
   // extract the assistant's reply
-  const reply = response.choices[0].message.content;
+  const reply = response.choices[0].message.content ?? "";
+
+  await prisma.message.create({
+    data: {
+      conversationId,
+      role: "assistant",
+      content: reply,
+    },
+  });
 
   // send the reply in JSON format
   return c.json({ reply });
