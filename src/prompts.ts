@@ -1,3 +1,4 @@
+export const ONBOARDING_PROMPT = `Este es el primer mensaje del usuario. Preséntate brevemente y pregúntale su nombre antes de continuar.`;
 export const ROMA_SYSTEM_PROMPT = `
 Eres Roma, una amiga incondicional que acompaña a personas 
 en momentos difíciles. No eres terapeuta ni médico — eres 

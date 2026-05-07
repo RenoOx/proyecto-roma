@@ -2,7 +2,7 @@ import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import OpenAI from "openai";
-import { ROMA_SYSTEM_PROMPT } from "./prompts";
+import { ROMA_SYSTEM_PROMPT, ONBOARDING_PROMPT } from "./prompts";
 import prisma from "./db";
 
 const app = new Hono();
@@ -34,8 +34,7 @@ app.post("/chat", async (c) => {
 
     const isFirstMessage = history.length === 0;
     const systemContent = isFirstMessage
-      ? ROMA_SYSTEM_PROMPT +
-        "\n\nEste es el primer mensaje del usuario. Preséntate brevemente y pregúntale su nombre antes de continuar."
+      ? ROMA_SYSTEM_PROMPT + "\n\n" + ONBOARDING_PROMPT
       : ROMA_SYSTEM_PROMPT;
 
     // Map the history to the format expected by OpenAI
@@ -43,7 +42,6 @@ app.post("/chat", async (c) => {
       role: msg.role as "user" | "assistant",
       content: msg.content,
     }));
-  
 
     //Save the user's message in the database
     await prisma.message.create({
