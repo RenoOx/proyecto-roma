@@ -25,6 +25,26 @@ app.post("/chat", async (c) => {
   }
 
   try {
+    // Get the last 10 messages of the conversation to provide context to the assistant
+    const history = await prisma.message.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: "asc" },
+      take: 10,
+    });
+
+    const isFirstMessage = history.length === 0;
+    const systemContent = isFirstMessage
+      ? ROMA_SYSTEM_PROMPT +
+        "\n\nEste es el primer mensaje del usuario. Preséntate brevemente y pregúntale su nombre antes de continuar."
+      : ROMA_SYSTEM_PROMPT;
+
+    // Map the history to the format expected by OpenAI
+    const messages = history.map((msg) => ({
+      role: msg.role as "user" | "assistant",
+      content: msg.content,
+    }));
+  
+
     //Save the user's message in the database
     await prisma.message.create({
       data: {
@@ -34,23 +54,10 @@ app.post("/chat", async (c) => {
       },
     });
 
-    // Get the last 10 messages of the conversation to provide context to the assistant
-    const history = await prisma.message.findMany({
-      where: { conversationId },
-      orderBy: { createdAt: "asc" },
-      take: 10,
-    });
-
-    // Map the history to the format expected by OpenAI
-    const messages = history.map((msg) => ({
-      role: msg.role as "user" | "assistant",
-      content: msg.content,
-    }));
-
     // call openai
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [{ role: "system", content: ROMA_SYSTEM_PROMPT }, ...messages],
+      messages: [{ role: "system", content: systemContent }, ...messages],
     });
 
     // extract the assistant's reply
