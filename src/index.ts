@@ -1,11 +1,19 @@
 import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import OpenAI from "openai";
 import { ROMA_SYSTEM_PROMPT, ONBOARDING_PROMPT } from "./prompts";
 import prisma from "./db";
 
 const app = new Hono();
+app.use(
+  "*",
+  cors({
+    origin: "http://proyecto-roma-production.up.railway.app",
+  }),
+);
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -81,12 +89,8 @@ app.post("/chat", async (c) => {
   }
 });
 
-//init the server in port 3000
+//init the server in port 3001
 
-serve(
-  {
-    fetch: app.fetch,
-    port: 3000,
-  },
-  () => [console.log("Server is running on http://localhost:3000")],
+serve({ fetch: app.fetch, port: 3001 }, () =>
+  console.log("Roma corriendo en http://localhost:3001"),
 );
