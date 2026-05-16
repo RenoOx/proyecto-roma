@@ -10,7 +10,7 @@ const app = new Hono();
 app.use(
   "*",
   cors({
-    origin: "https://proyecto-roma-production.up.railway.app",
+    origin: "https://roma-frontend-chi.vercel.app/",
   }),
 );
 
