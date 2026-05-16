@@ -91,6 +91,6 @@ app.post("/chat", async (c) => {
 
 //init the server in port 3001
 
-serve({ fetch: app.fetch, port: 3001 }, () =>
-  console.log("Roma corriendo en http://localhost:3001"),
+serve({ fetch: app.fetch, port: Number(process.env.PORT) || 3001 }, () =>
+  console.log("Roma corriendo en puerto", process.env.PORT || 3001),
 );
