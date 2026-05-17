@@ -84,6 +84,27 @@ app.post("/chat", async (c) => {
   }
 });
 
+app.get("/conversations/:conversationId/messages", async (c) => {
+  //Historial de la conversación
+
+  const conversationId = c.req.param("conversationId");
+
+  try {
+    //Consultar a la db por los mensajes de esa conversación
+    const messages = await prisma.message.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: "asc" },
+    });
+    return c.json({ messages });
+  } catch (error) {
+    console.error("Error en GET /chat:", error);
+    return c.json(
+      { error: "Algo salió mal al obtener el historial. Intenta de nuevo." },
+      500,
+    );
+  }
+});
+
 //init the server in port 3001
 
 serve({ fetch: app.fetch, port: Number(process.env.PORT) || 3001 }, () =>
