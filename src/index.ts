@@ -7,12 +7,7 @@ import { ROMA_SYSTEM_PROMPT, ONBOARDING_PROMPT } from "./prompts";
 import prisma from "./db";
 
 const app = new Hono();
-app.use(
-  "*",
-  cors({
-    origin: "https://roma-frontend-chi.vercel.app/",
-  }),
-);
+app.use("*", cors());
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
