@@ -60,10 +60,11 @@ app.post("/chat", async (c) => {
 
     // call openai
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
+      temperature: 0.9,
+      max_tokens: 300,
       messages: [{ role: "system", content: systemContent }, ...messages],
     });
-
     // extract the assistant's reply
     const reply = response.choices[0].message.content ?? "";
 
