@@ -46,6 +46,9 @@ app.post("/chat", async (c) => {
       content: msg.content,
     }));
 
+    // Agregar el mensaje actual del usuario al historial
+    messages.push({ role: "user", content: message });
+
     //Save the user's message in the database
     await prisma.message.create({
       data: {
