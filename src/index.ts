@@ -35,10 +35,31 @@ app.post("/chat", async (c) => {
       take: 10,
     });
 
+    const now = new Date().toLocaleString("es-PE", {
+      timeZone: "America/Lima",
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+    // Detectar si hubo una pausa larga entre conversaciones
+    const lastMessage = history[history.length - 1];
+    const daysSinceLastMessage = lastMessage
+      ? Math.floor(
+          (Date.now() - new Date(lastMessage.createdAt).getTime()) /
+            (1000 * 60 * 60 * 24),
+        )
+      : 0;
+
+    const pauseContext =
+      daysSinceLastMessage > 1
+        ? `\n\nHan pasado ${daysSinceLastMessage} días desde que hablaron. Saluda a la persona de manera cálida y natural, como una amiga que no ha visto a alguien en un tiempo — algo como "¡Qué gusto verte de nuevo! ¿Cómo te fue estos días?" Hazlo espontáneo, no formal.`
+        : "";
     const isFirstMessage = history.length === 0;
     const systemContent = isFirstMessage
-      ? ROMA_SYSTEM_PROMPT + "\n\n" + ONBOARDING_PROMPT
-      : ROMA_SYSTEM_PROMPT;
+      ? ROMA_SYSTEM_PROMPT +
+        `\n\nFecha y hora actual: ${now}` +
+        "\n\n" +
+        ONBOARDING_PROMPT
+      : ROMA_SYSTEM_PROMPT + `\n\nFecha y hora actual: ${now}` + pauseContext;
 
     // Map the history to the format expected by OpenAI
     const messages = history.map((msg) => ({
