@@ -86,7 +86,7 @@ app.post("/chat", async (c) => {
       max_tokens: 300,
       messages: [{ role: "system", content: systemContent }, ...messages],
     });
-    // extract the assistant's reply
+    /*   // extract the assistant's reply
     const reply = response.choices[0].message.content ?? "";
 
     await prisma.message.create({
@@ -98,7 +98,28 @@ app.post("/chat", async (c) => {
     });
 
     // send the reply in JSON format
-    return c.json({ reply });
+    return c.json({ reply }); */
+
+    const fullReply = response.choices[0].message.content ?? "";
+
+    // Dividir la respuesta por [SPLIT] en un array de mensajes
+    const replyParts = fullReply
+      .split("[SPLIT]")
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
+
+    // Guardar cada parte como un mensaje separado en la DB
+    for (const part of replyParts) {
+      await prisma.message.create({
+        data: {
+          conversationId,
+          role: "assistant",
+          content: part,
+        },
+      });
+    }
+
+    return c.json({ replies: replyParts });
   } catch (error) {
     // Cualquier error de OpenAI o DB llega aquí
     console.error("Error en /chat:", error);
